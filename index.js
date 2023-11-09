@@ -25,17 +25,22 @@ async function run() {
         await client.connect();
 
         // connect to the "insertDB" database and access its "foodSharing" collection 
-        const coffeeCollection = client.db('foodSharing').collection('foods')
+        const foodsCollection = client.db('foodSharing').collection('foods')
 
         // post
-        app.post('/foods', async(req, res) => {
+        app.post('/foods', async (req, res) => {
             const newFoods = req.body;
-            console.log(newFoods);
-
-            const result = await coffeeCollection.insertOne(newFoods);
+            const result = await foodsCollection.insertOne(newFoods);
             res.send(result)
         })
 
+        // get
+        // read
+        app.get('/foods', async (req, res) => {
+            const cursor = foodsCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
 
 
         // Send a ping to confirm a successful connection
