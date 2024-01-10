@@ -1,13 +1,16 @@
-const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
+const express = require('express')
+const cors = require('cors')
+require('dotenv').config()
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb')
 const app = express();
 const port = process.env.PORT || 5000;
 
 
+// middleware
+app.use(cors());
+app.use(express.json());
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.9u7odmy.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -25,7 +28,29 @@ async function run() {
         await client.connect();
 
         // connect to the "insertDB" database and access its "foodSharing" collection 
-        const foodsCollection = client.db('foodSharing').collection('foods')
+        const foodsCollection = client.db('foodSharing').collection('foods');
+        const requestCollection = client.db('foodSharing').collection('requests');
+
+        // get --> read
+        app.get('/foods', async (req, res) => {
+            const cursor = foodsCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+        // get --> single data
+        app.get('/foods/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            // some data red
+            const options = {
+                // Include only the `title` and `imdb` fields in the returned document
+                projection: { foodName: 1, photo: 1, location: 1, notes: 1, userName: 1, quantity: 1, date: 1 },
+            };
+
+            const result = await foodsCollection.findOne(query, options)
+            res.send(result)
+        })
 
         // post
         app.post('/foods', async (req, res) => {
@@ -34,13 +59,33 @@ async function run() {
             res.send(result)
         })
 
-        // get
-        // read
-        app.get('/foods', async (req, res) => {
-            const cursor = foodsCollection.find();
-            const result = await cursor.toArray();
+
+
+        // <-!----requests------->        
+        app.get('/requests', async (req, res) => {
+            // console.log(req.query.email);
+            let query = {}
+            if (req.query?.email) {
+                query = { email: req.query.email }
+            }
+            const result = await requestCollection.find(query).toArray();
             res.send(result);
+        });
+
+        app.post('/requests', async (req, res) => {
+            const request = req.body;
+            // console.log(request);
+            const result = await requestCollection.insertOne(request);
+            res.send(result)
+        });
+
+        app.delete('/requests/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await requestCollection.deleteOne(query);
+            res.send(result)
         })
+
 
 
         // Send a ping to confirm a successful connection
@@ -53,15 +98,10 @@ async function run() {
 }
 run().catch(console.dir);
 
-
-// middleware
-app.use(cors());
-app.use(express.json());
-
 app.get('/', (req, res) => {
-    res.send('doctor is running');
+    res.send('FoodSa Sharing is running');
 })
 
 app.listen(port, () => {
-    console.log(`Car Doctor Server is running on port ${port}`);
+    console.log(`FoodSa Sharing  Server is running on port ${port}`);
 })
