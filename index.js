@@ -45,10 +45,32 @@ async function run() {
             // some data red
             const options = {
                 // Include only the `title` and `imdb` fields in the returned document
-                projection: { foodName: 1, photo: 1, location: 1, notes: 1, userName: 1, quantity: 1, date: 1 },
+                projection: { userPhoto: 1, userName: 1, foodName: 1, photo: 1, location: 1, notes: 1, userName: 1, quantity: 1, date: 1 },
             };
 
             const result = await foodsCollection.findOne(query, options)
+            res.send(result)
+        });
+
+        // updated
+        app.put('/foods/:id', async (req, res) => {
+            const id = req.params.id;
+            const food = req.body;
+            // console.log(id,  user);
+            const filter = { _id: new ObjectId(id) }
+            const option = { upsert: true }
+            const updatedFood = {
+                $set: {
+                    foodName: food.foodName,
+                    quantity: food.quantity,
+                    photo: food.photo,
+                    location: food.location,
+                    date: food.date,
+                    notes: food.notes,
+                }
+            }
+            console.log(updatedFood)
+            const result = await foodsCollection.updateOne(filter, updatedFood, option)
             res.send(result)
         })
 
@@ -56,6 +78,13 @@ async function run() {
         app.post('/foods', async (req, res) => {
             const newFoods = req.body;
             const result = await foodsCollection.insertOne(newFoods);
+            res.send(result)
+        });
+
+        app.delete('/foods/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await foodsCollection.deleteOne(query);
             res.send(result)
         })
 
