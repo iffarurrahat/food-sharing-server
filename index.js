@@ -45,7 +45,7 @@ async function run() {
             // some data red
             const options = {
                 // Include only the `title` and `imdb` fields in the returned document
-                projection: { userPhoto: 1, userName: 1, foodName: 1, photo: 1, location: 1, notes: 1, userName: 1, quantity: 1, date: 1 },
+                projection: { userPhoto: 1, userName: 1, foodName: 1, photo: 1, location: 1, notes: 1, userName: 1, quantity: 1, date: 1, email: 1 },
             };
 
             const result = await foodsCollection.findOne(query, options)
@@ -69,7 +69,6 @@ async function run() {
                     notes: food.notes,
                 }
             }
-            console.log(updatedFood)
             const result = await foodsCollection.updateOne(filter, updatedFood, option)
             res.send(result)
         })
@@ -113,8 +112,16 @@ async function run() {
             const query = { _id: new ObjectId(id) }
             const result = await requestCollection.deleteOne(query);
             res.send(result)
-        })
+        });
 
+
+        // <-!-----manage single food------->
+        app.get('/manage/:id', async (req, res) => {
+            console.log(req.params.id);
+            const result = await requestCollection.find({ foodDonarId: req.params.id}).toArray();
+            console.log(result);
+            res.send(result);
+        })
 
 
         // Send a ping to confirm a successful connection
