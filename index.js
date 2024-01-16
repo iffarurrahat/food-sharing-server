@@ -25,7 +25,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+
 
         // connect to the "insertDB" database and access its "foodSharing" collection 
         const foodsCollection = client.db('foodSharing').collection('foods');
@@ -45,7 +45,7 @@ async function run() {
             // some data red
             const options = {
                 // Include only the `title` and `imdb` fields in the returned document
-                projection: { userPhoto: 1, userName: 1, foodName: 1, photo: 1, location: 1, notes: 1, userName: 1, quantity: 1, date: 1, email: 1 },
+                projection: { userPhoto: 1, userName: 1, foodName: 1, photo: 1, location: 1, status: 1, notes: 1, userName: 1, quantity: 1, date: 1, email: 1 },
             };
 
             const result = await foodsCollection.findOne(query, options)
@@ -117,10 +117,27 @@ async function run() {
 
         // <-!-----manage single food------->
         app.get('/manage/:id', async (req, res) => {
-            console.log(req.params.id);
-            const result = await requestCollection.find({ foodDonarId: req.params.id}).toArray();
-            console.log(result);
+            // console.log(req.params.id);
+            const result = await requestCollection.find({ foodDonarId: req.params.id }).toArray();
+            // console.log(result);
             res.send(result);
+        });
+
+        app.patch('/manage/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const updatingManage = req.body;
+            console.log('updating Manage:', updatingManage);
+
+            const updatedDoc = {
+                $set: {
+                    status: updatingManage.status
+                }
+            }
+
+            const result = await requestCollection.updateOne(filter, updatedDoc);
+            res.send(result)
+
         })
 
 
